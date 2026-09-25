@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import PredictionHelpTooltip from "./PredictionHelpTooltip";
+import DirectionIcon from "./DirectionIcon";
 import "./PredictionCard.css";
 
 const EXACT_PRICE_MIN = 0.0001;
@@ -171,7 +172,7 @@ export function PredictionControls({
           disabled={isDisabled || !canSubmit}
           aria-label="Predict price goes UP"
         >
-          <span className="prediction-card__button-arrow">↑</span>
+          <DirectionIcon direction="UP" className="prediction-card__button-arrow" />
           <span className="prediction-card__button-text">UP</span>
         </button>
 
@@ -184,7 +185,7 @@ export function PredictionControls({
           disabled={isDisabled || !canSubmit}
           aria-label="Predict price goes DOWN"
         >
-          <span className="prediction-card__button-arrow">↓</span>
+          <DirectionIcon direction="DOWN" className="prediction-card__button-arrow" />
           <span className="prediction-card__button-text">DOWN</span>
         </button>
       </div>

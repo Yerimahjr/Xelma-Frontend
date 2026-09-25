@@ -298,3 +298,70 @@ describe('RoundCard Component', () => {
     });
   });
 });
+
+describe('RoundCard pool bar — direction is not conveyed by colour alone', () => {
+  const round: MockRound = {
+    id: 7,
+    asset: 'ETH',
+    mode: 'updown',
+    status: 'live',
+    startPrice: 3200,
+    poolUp: 2500,
+    poolDown: 1500,
+    closesInSeconds: 150,
+  };
+
+  it('draws UP as a solid segment and DOWN as a striped one', () => {
+    render(<RoundCard round={round} onSubmitPrediction={vi.fn()} />);
+    const up = screen.getByTestId('round-card-pool-up');
+    const down = screen.getByTestId('round-card-pool-down');
+
+    expect(up).toHaveAttribute('data-pattern', 'solid');
+    expect(up.style.backgroundImage).toBe('');
+    expect(down).toHaveAttribute('data-pattern', 'striped');
+    expect(down.style.backgroundImage).toContain('repeating-linear-gradient');
+  });
+
+  it('keeps the segment widths in line with the pool split', () => {
+    render(<RoundCard round={round} onSubmitPrediction={vi.fn()} />);
+
+    expect(screen.getByTestId('round-card-pool-up').style.width).toBe('63%');
+    expect(screen.getByTestId('round-card-pool-down').style.width).toBe('37%');
+  });
+
+  it('separates the two segments with a border when both sides have a share', () => {
+    render(<RoundCard round={round} onSubmitPrediction={vi.fn()} />);
+
+    expect(screen.getByTestId('round-card-pool-down').className).toMatch(/\bborder-l-2\b/);
+  });
+
+  it('drops the divider when one side holds the whole pool', () => {
+    render(<RoundCard round={{ ...round, poolUp: 0, poolDown: 4000 }} onSubmitPrediction={vi.fn()} />);
+
+    expect(screen.getByTestId('round-card-pool-up').style.width).toBe('0%');
+    expect(screen.getByTestId('round-card-pool-down').style.width).toBe('100%');
+    expect(screen.getByTestId('round-card-pool-down').className).not.toMatch(/border-l-2/);
+  });
+
+  it('puts a matching triangle in each label', () => {
+    render(<RoundCard round={round} onSubmitPrediction={vi.fn()} />);
+    const upLabel = screen.getByText('UP 63%');
+    const downLabel = screen.getByText('DOWN 37%');
+
+    expect(upLabel.querySelector('svg[data-direction="up"]')).not.toBeNull();
+    expect(upLabel.querySelector('svg[data-direction="down"]')).toBeNull();
+    expect(downLabel.querySelector('svg[data-direction="down"]')).not.toBeNull();
+    expect(downLabel.querySelector('svg[data-direction="up"]')).toBeNull();
+  });
+
+  it('does not render a pool bar for precision rounds', () => {
+    render(
+      <RoundCard
+        round={{ ...round, mode: 'precision', totalPool: 4000, predictionCount: 3 }}
+        onSubmitPrediction={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByTestId('round-card-pool-bar')).toBeNull();
+  });
+});

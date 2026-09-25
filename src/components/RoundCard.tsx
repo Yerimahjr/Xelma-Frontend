@@ -4,6 +4,7 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import type { MockRound } from '../types';
 import CountdownTimer from './CountdownTimer';
+import DirectionIcon from './DirectionIcon';
 import { formatVXLM, formatPercent } from '../lib/utils';
 import { TRANSITION } from '../utils/motion';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -11,6 +12,11 @@ import { useRoundCountdown } from '../hooks/useRoundCountdown';
 
 const URGENCY_THRESHOLD_SECONDS = 30;
 const URGENCY_THRESHOLD_MS = URGENCY_THRESHOLD_SECONDS * 1000;
+
+// DOWN segment of the pool bar is striped (UP stays solid) so the two sides
+// can be told apart without relying on colour, e.g. in grayscale.
+const DOWN_BAR_PATTERN =
+  'repeating-linear-gradient(45deg, rgba(0,0,0,0.4) 0, rgba(0,0,0,0.4) 3px, transparent 3px, transparent 6px)';
 
 const ASSET_ICONS: Record<string, string> = {
   BTC: '₿',
@@ -168,21 +174,34 @@ const RoundCard = forwardRef<HTMLElement, RoundCardProps>(function RoundCard(
 
       {round.mode === 'updown' ? (
         <div className="mt-1">
-          <div className="flex h-2 overflow-hidden rounded-full bg-gray-800">
+          <div
+            className="flex h-3 overflow-hidden rounded-full bg-gray-800"
+            data-testid="round-card-pool-bar"
+          >
             <div
               className="bg-[#2C4BFD] transition-all"
               style={{ width: `${upPct}%` }}
               title={`UP ${formatPercent(upPct / 100, 0)}`}
+              data-testid="round-card-pool-up"
+              data-pattern="solid"
             />
             <div
-              className="bg-rose-500 transition-all"
-              style={{ width: `${downPct}%` }}
+              className={`bg-rose-500 transition-all ${upPct > 0 && downPct > 0 ? 'border-l-2 border-white/80' : ''}`}
+              style={{ width: `${downPct}%`, backgroundImage: DOWN_BAR_PATTERN }}
               title={`DOWN ${formatPercent(downPct / 100, 0)}`}
+              data-testid="round-card-pool-down"
+              data-pattern="striped"
             />
           </div>
           <div className="mt-1 flex justify-between text-xs text-gray-500">
-            <span className="text-[#BEC7FE]">UP {formatPercent(upPct / 100, 0)}</span>
-            <span className="text-rose-400">DOWN {formatPercent(downPct / 100, 0)}</span>
+            <span className="inline-flex items-center gap-1 text-[#BEC7FE]">
+              <DirectionIcon direction="UP" className="h-3 w-3" />
+              UP {formatPercent(upPct / 100, 0)}
+            </span>
+            <span className="inline-flex items-center gap-1 text-rose-400">
+              <DirectionIcon direction="DOWN" className="h-3 w-3" />
+              DOWN {formatPercent(downPct / 100, 0)}
+            </span>
           </div>
         </div>
       ) : (
